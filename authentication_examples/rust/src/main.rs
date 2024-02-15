@@ -100,8 +100,8 @@ impl ApiTokenProvider {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let api_key = "b4ccc098-897f-4696-94b4-34e8e312667b".to_string();
-    let private_key = include_str!("/Users/slavaserebriannyi/api_keys/fireblocks_secret.key");
+    let api_key = "API_KEY".to_string();
+    let private_key = include_str!("API_SECRET_KEY_PATH");
     let api_url = "https://api.fireblocks.io".to_string(); // For sandbox use: https://sandbox-api.fireblocks.io
     
     let provider = ApiTokenProvider::new(private_key.to_string(), api_key.clone(), api_url.clone());
