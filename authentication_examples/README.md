@@ -18,7 +18,6 @@ In this repo you will find Fireblocks API authentication mechanism implementatio
 
 The examples include the access token generation method (JWT) in addition to a GET and POST call examples.
 
----
 ⚠️ **Note**
 
 - All examples have a hard encoded `base URL` for the Fireblocks production API. Make sure to find and update the base URL if you want to try these on the sandbox environment.
@@ -51,7 +50,6 @@ The payload field should contain the following fields:
 - `sub` - The API Key.
 - `bodyHash` - Hex-encoded SHA-256 hash of the raw HTTP request body.
 
----
 ⚠️ **Note**
 
 The JWT must be signed with the Fireblocks API secret key and the `RS256 (RSASSA-PKCS1-v1_5 using SHA-256 hash)` algorithm.
