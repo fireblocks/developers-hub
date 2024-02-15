@@ -10,10 +10,11 @@
 # Fireblocks Developers Hub
 
 This repository contains different Fireblocks API code examples and code snippets.
+--- 
 
-⚠️❗ **Warning** ❗⚠️ 
+⚠️❗ **WARNING** ❗⚠️ 
 
-Kindly note that the content of this repository is not production-ready and are used only for reference.
+Kindly note that the content of this repository is not production-ready and is used only for reference.
 
 ---
 
