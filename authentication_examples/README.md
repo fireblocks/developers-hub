@@ -58,7 +58,7 @@ The JWT must be signed with the Fireblocks API secret key and the `RS256 (RSASSA
 
 
 ### Fireblocks API SDKs
-Fireblocks has release official API SDKs in the following programming languages:
+Fireblocks released official API SDKs in the following programming languages:
 - [JavaScript](https://github.com/fireblocks/fireblocks-sdk-js)
 - [Python](https://github.com/fireblocks/fireblocks-sdk-py)
 
