@@ -74,6 +74,7 @@ The users can generate client libraries by importing the OpenAPI spec into [Swag
 Once the file is imported click on *Generate Client* in top menu and choose the relevant programming language.
 
 ⚠️ **Note**
+
 The Swagger Editor client library generation process will NOT generate the authentication mechanism as it's not specified in the OpenAPI Specification.
 
 ---
