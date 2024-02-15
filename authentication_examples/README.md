@@ -10,11 +10,11 @@
 # Fireblocks API Authentication examples
 In this repo you will find Fireblocks API authentication mechanism implementation examples in multiple programming languages.
 
-- Rust
-- Java
-- PHP
-- Go
-- C#
+- [Rust](https://github.com/fireblocks/developers-hub/tree/main/authentication_examples/rust)
+- [Java](https://github.com/fireblocks/developers-hub/tree/main/authentication_examples/java/my-java-project)
+- [PHP](https://github.com/fireblocks/developers-hub/tree/main/authentication_examples/php)
+- [Go](https://github.com/fireblocks/developers-hub/tree/main/authentication_examples/go)
+- [C#](https://github.com/fireblocks/developers-hub/tree/main/authentication_examples/cs)
 
 The examples include the access token generation method (JWT) in addition to a GET and POST call examples.
 
