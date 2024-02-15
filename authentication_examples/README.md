@@ -26,7 +26,7 @@ The examples include the access token generation method (JWT) in addition to a G
 
 ---
 
-## Fireblocks API Auth 
+## Fireblocks API Authentication scheme
 Fireblocks uses API keys to authenticate all API calls. 
 
 Depending on the type of workspace environment, the base API URL will be one of the following:
