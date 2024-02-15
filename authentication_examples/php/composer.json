@@ -1,0 +1,18 @@
+{
+    "name": "slavaserebriannyi/php",
+    "autoload": {
+        "psr-4": {
+            "Slavaserebriannyi\\Php\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "SlavaSereb",
+            "email": "slava@fireblocks.com"
+        }
+    ],
+    "require": {
+      "firebase/php-jwt": "^6.10.0",
+      "guzzlehttp/guzzle": "^7.8.1"
+    }
+}
