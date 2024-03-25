@@ -32,9 +32,9 @@ It is engineered to seamlessly integrate with plugins, allowing users to effortl
 
 - [Introduction](#introduction)
 - [Architecture](#architecture)
-- [Basic Plugins](https://github.com/fireblocks/callback-plugins/tree/main/src/plugins#base-plugins-)
-  - [Transaction Validation](https://github.com/fireblocks/callback-plugins/tree/main/src/plugins#transaction-validation-plugin-txid_validationpytxidvalidation-class)
-  - [Extra Signature Validation](https://github.com/fireblocks/callback-plugins/tree/main/src/plugins#extra-signature-validation-extra_signaturepyextrasignature-class)
+- [Basic Plugins](https://github.com/fireblocks/developers-hub/blob/main/plugin_based_callback/src/plugins/README.md#basic-plugins-)
+  - [Transaction Validation](https://github.com/fireblocks/developers-hub/blob/main/plugin_based_callback/src/plugins/README.md#transaction-validation-plugin-txid_validationpytxidvalidation-class)
+  - [Extra Signature Validation](https://github.com/fireblocks/developers-hub/blob/main/plugin_based_callback/src/plugins/README.md#extra-signature-validation-extra_signaturepyextrasignature-class)
 - [Contribution](#contribution)
   - [Adding New Plugins](#new-plugins)
   - [New DB Connections](#setting-a-new-db-connection)
