@@ -21,3 +21,4 @@ Kindly note that the content of this repository is not production-ready and is u
 ## Table Of Contents 📖
 
 - [Fireblocks API Auth Examples](https://github.com/fireblocks/developers-hub/blob/main/authentication_examples/README.md)
+- [Fireblocks Plugin Based Callback Handler application](https://github.com/fireblocks/developers-hub/tree/main/plugin_based_callback)
