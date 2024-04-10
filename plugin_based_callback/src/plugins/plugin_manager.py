@@ -45,12 +45,10 @@ class PluginManager:
     def get_plugins(self) -> List[PluginInterface]:
         return self.plugins
 
-    async def process_request(self, data: dict) -> bool | None:
+    async def process_request(self, data: dict) -> bool:
         """Run the main method (entry point) for each plugin"""
         for plugin in self.plugins:
             res = await plugin.process_request(data)
-            if res is None:
-                return None
-            elif res is False:
+            if not res:
                 return False
         return True

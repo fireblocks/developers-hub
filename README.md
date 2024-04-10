@@ -22,3 +22,6 @@ Kindly note that the content of this repository is not production-ready and is u
 
 - [Fireblocks API Auth Examples](https://github.com/fireblocks/developers-hub/blob/main/authentication_examples/README.md)
 - [Fireblocks Plugin Based Callback Handler application](https://github.com/fireblocks/developers-hub/tree/main/plugin_based_callback)
+- [Validate RAW ETH Transaction](https://github.com/fireblocks/eth_tx_validation)
+- [Validate RAW BTC Transaction](https://github.com/fireblocks/btc_tx_validation)
+- [XRP Raw Signing Tools](https://github.com/fireblocks/xrp-raw-tools)

@@ -21,7 +21,6 @@ async def on_startup(app: FastAPI):
     """Life span generator - execute validations and load plugins on `startup` event.
     Nothing to execute on `shutdown` event"""
     try:
-
         await validations.run_validations()
         plugin_specs = validations.PLUGINS
         await plugin_manager.load_plugins(plugin_specs)
@@ -39,28 +38,13 @@ async def on_startup(app: FastAPI):
 app = FastAPI(lifespan=on_startup)
 
 
-@app.post("/v2/tx_sign_request")
-@authenticate_jwt
-async def tx_approval(request: Request, decoded_payload=None, authenticator=None):
-    """Transaction Approval endpoint:
-    https://developers.fireblocks.com/reference/transaction-signing-request-approval"""
+async def process_plugin_check(request: Request, decoded_payload=None) -> PlainTextResponse:
     try:
         approval_result = await plugin_manager.process_request(decoded_payload)
-        if approval_result is None:
-            response_action = "IGNORE"
-        elif approval_result is False:
-            response_action = "REJECT"
-        else:
-            response_action = 'APPROVE'
-
-        reason = (
-            None
-            if approval_result
-            else "Callback Handler Logic denied the transaction approval"
-        )
-
+        response_action = 'APPROVE' if approval_result else "REJECT"
+        reason = None if approval_result else "Callback Handler Logic denied the transaction approval"
         response = CallbackResponse(
-            authenticator,
+            decoded_payload.get("authenticator"),
             response_action,
             decoded_payload["requestId"],
             reason
@@ -69,16 +53,23 @@ async def tx_approval(request: Request, decoded_payload=None, authenticator=None
         return PlainTextResponse(response)
     except Exception as e:
         logger.exception(
-            f"Transaction Approval process failed with the following error: {e}"
+            f"Processing failed with the following error: {e}"
         )
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
+@app.post("/v2/tx_sign_request")
+@authenticate_jwt
+async def tx_approval(request: Request, decoded_payload=None, authenticator=None):
+    """Transaction Approval endpoint."""
+    return await process_plugin_check(request, decoded_payload)
+
+
 @app.post("/v2/config_change_sign_request")
 @authenticate_jwt
-async def change_approval(request: Request):
-    """Configuration Change Approval - #TODO"""
-    pass
+async def change_approval(request: Request, decoded_payload=None, authenticator=None):
+    """Configuration Change Approval endpoint."""
+    return await process_plugin_check(request, decoded_payload)
 
 
 if __name__ == "__main__":
