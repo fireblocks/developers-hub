@@ -56,4 +56,22 @@ Purpose - validate that the arrived transaction was initiated only by a pre-defi
 1. Public key file path for extra signature verification (`EXTRA_SIGNATURE_PUBLIC_KEY_PATH` var in .env file) 
 2. Currently the supported signature algorithm is - `RSA-SHA256`
 
+### Transaction Policy Validation Plugin (`tx_policy_validation.py/TxPolicyValidation` class)
+Being executed on `POST /v2/tx_sign_request`.
+The plugin validates that the transaction is allowed by the defined policy. \
+Purpose - Customize policy programmatically, supporting your specific usecase. 
+
+#### Flow:
+1. API client initiates transaction via Fireblocks API 
+2. The transaction hits the Co-Signer machine that forwards the request to the configured callback handler
+3. The callback handler runs the Transaction Policy Validation Plugin
+4. The plugin fetches the active transaction policy, or the user can define a custom policy
+5. The plugin checks the transaction against the policy, determines if it is allowed or not
+6. If true -> returns `APPROVE` else returns `REJECT`
+
+#### Requirements:
+Fireblocks API Credentials
+   - API Key (`FIREBLOCKS_API_KEY` in .env file)
+   - API Private Key Path (`FIREBLOCKS_API_PRIVATE_KEY_PATH=` in .env file)
+
 ---
