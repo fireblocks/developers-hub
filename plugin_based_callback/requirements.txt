@@ -7,3 +7,5 @@ python-dotenv>=1.0.1
 PyJWT>=2.8.0
 uvicorn>=0.27.0.post1
 aiofiles>=23.2.1
+fireblocks_sdk>=2.7.0
+pytest>=8.1.1

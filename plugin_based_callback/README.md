@@ -35,6 +35,7 @@ It is engineered to seamlessly integrate with plugins, allowing users to effortl
 - [Basic Plugins](https://github.com/fireblocks/developers-hub/blob/main/plugin_based_callback/src/plugins/README.md#basic-plugins-)
   - [Transaction Validation](https://github.com/fireblocks/developers-hub/blob/main/plugin_based_callback/src/plugins/README.md#transaction-validation-plugin-txid_validationpytxidvalidation-class)
   - [Extra Signature Validation](https://github.com/fireblocks/developers-hub/blob/main/plugin_based_callback/src/plugins/README.md#extra-signature-validation-extra_signaturepyextrasignature-class)
+  - [Transaction Policy Validation](https://github.com/fireblocks/developers-hub/blob/main/plugin_based_callback/src/plugins/README.md#transaction-policy-validation-plugin-tx_policy_validationpytxpolicyvalidation-class)
 - [Contribution](#contribution)
   - [Adding New Plugins](#new-plugins)
   - [New DB Connections](#setting-a-new-db-connection)
