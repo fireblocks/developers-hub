@@ -11,9 +11,7 @@
 
 This repository contains different Fireblocks API code examples and code snippets.
 --- 
-
-⚠️  `Please be aware that this package serves as an example to demonstrate the usage of the Fireblocks API Co-Signer callback handler. It is not intended for use in production environments.` ⚠️
-
+⚠️  `Kindly note that the content of this repository is not production-ready and is used only for reference.` ⚠️
 ---
 
 ## Table Of Contents 📖
