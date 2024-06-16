@@ -1,18 +1,23 @@
+mod types;
+
 use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
 use serde::{Serialize, Deserialize};
 use sha2::{Sha256, Digest};
 use uuid::Uuid;
 use chrono::Utc;
 use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
+use crate::types::*;
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct Claims {
     uri: String,
     nonce: String,
     iat: i64,
     exp: i64,
     sub: String,
-    bodyHash: String,
+    #[serde(rename = "bodyHash")]
+    body_hash: String,
 }
 
 pub struct ApiTokenProvider {
@@ -40,7 +45,7 @@ impl ApiTokenProvider {
             iat: now,
             exp: now + 30, // Adjusted to ensure it's within the required timeframe
             sub: self.api_key.clone(),
-            bodyHash: body_hash,
+            body_hash,
         };
 
         let token = encode(&Header::new(Algorithm::RS256), &claims, &EncodingKey::from_rsa_pem(self.private_key.as_bytes())?)?;
@@ -71,6 +76,43 @@ impl ApiTokenProvider {
         }
     }
 
+    // TODO: add PagedVaultAccountsRequestFilters param
+    pub async fn get_vaults(&self) -> Result<PagedVaultAccountsResponse, Box<dyn std::error::Error>> {
+        let response_text = self.get_request("/v1/vault/accounts_paged").await?;
+        let vaults: PagedVaultAccountsResponse = serde_json::from_str(&response_text).unwrap();
+        print!("{:?}", vaults);
+        Ok(vaults)
+    }
+
+    pub async fn get_supported_assets(&self) -> Result<Vec<AssetTypeResponse>, Box<dyn std::error::Error>> {
+        let res = self.get_request("/v1/supported_assets").await?;
+        let trimmed_res = res.trim();
+        let result = serde_json::from_str::<Vec<AssetTypeResponse>>(trimmed_res);
+
+        match result {
+            Ok(supported) => {
+                println!("Response:\n{:#?}", supported);
+                Ok(supported)
+            },
+            Err(e) => {
+                eprintln!("Failed to deserialize response: {:?}", trimmed_res);
+                eprintln!("Deserialization error: {}", e);
+                Err(Box::new(e))
+            }
+        }
+    }
+
+    // TODO: add Filter GetAssetWalletsFilters
+    pub async fn get_asset_wallets(&self) -> Result<String, Box<dyn std::error::Error>> {
+        let res = self.get_request("/v1/vault/asset_wallets").await?;
+        println!("RAW JSON from Fireblocks API:\n {:#?}", res);
+        // TODO: Serialize into Get AssetWalletResponse instead of just JSON
+        // let assets: GetAssetWalletsResponse = serde_json::from_str(&res).unwrap();
+        // print!("{:?}", assets);
+        Ok(res)
+
+    }
+
     pub async fn post_request(&self, path: &str, body: &str) -> Result<String, Box<dyn std::error::Error>> {
         let token = self.sign_jwt(path, Some(body))?;
 
@@ -96,27 +138,101 @@ impl ApiTokenProvider {
             Err(format!("POST Request failed with status: {}", response.status()))?
         }
     }
+
+    pub async fn create_tx(&self, tx_args: &TransactionArguments) -> Result<CreateTransactionResponse, Box<dyn std::error::Error>> {
+        println!("Creating transaction with arguments: {:#?}", tx_args);
+        let json_args = serde_json::to_string(tx_args)?;
+        let res = self.post_request("/v1/transactions", &json_args).await?;
+
+        let create_tx_response: CreateTransactionResponse = serde_json::from_str(&res)?;
+        println!("Create transaction response:\n{:#?}", create_tx_response);
+        Ok(create_tx_response)
+    }
 }
+
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let api_key = "API_KEY".to_string();
-    let private_key = include_str!("API_SECRET_KEY_PATH");
+    let private_key = "API_SECRET_KEY_PATH";
     let api_url = "https://api.fireblocks.io".to_string(); // For sandbox use: https://sandbox-api.fireblocks.io
     
-    let provider = ApiTokenProvider::new(private_key.to_string(), api_key.clone(), api_url.clone());
+    let fireblocks = ApiTokenProvider::new(private_key.to_string(), api_key.clone(), api_url.clone());
+    let tx = TransactionArguments {
+        asset_id: "ETH_TEST5".to_string(),
+        operation: TransactionOperation::TRANSFER,
+        source: TransferPeerPath {
+            peer_type: PeerType::VAULT_ACCOUNT,
+            id: "0".to_string(),
+        },
+        destination: Some(DestinationTransferPeerPath {
+            peer_type: PeerType::VAULT_ACCOUNT,
+            id: "1".to_string(),
+        }),
+        amount: "0.01".to_string(),
+        note: "Sample transaction".to_string(),
+    };
+    println!("Creating TX");
+    let c = fireblocks.create_tx(&tx).await?;
+    println!("Sumitted TX: {:#?}", c);
 
-    // Call GET request
-    let get_response = provider.get_request("/v1/vault/accounts_paged").await?;
+     // Call GET request
+    let get_response = fireblocks.get_request("/v1/vault/accounts_paged").await?;
     println!("GET Response: {}", get_response);
-
+   
     // Call POST request
     let body = serde_json::json!({
-        "name": "MyRustVault",
-        "hiddenOnUI": true,
+       "name": "MyRustVault",
+       "hiddenOnUI": true,
     });
-    let post_response = provider.post_request("/v1/vault/accounts", &body.to_string()).await?;
+    let post_response = fireblocks.post_request("/v1/vault/accounts", &body.to_string()).await?;
     println!("POST Response: {}", post_response);
-
+    
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tokio::test;
+
+    #[tokio::test]
+    async fn test_get_supported() {
+        let api_key = "API_KEY".to_string();
+        let private_key = "API_SECRET_KEY_PATH";
+        let api_url = "https://api.fireblocks.io".to_string(); // For sandbox use: https://sandbox-api.fireblocks.io
+
+        let fireblocks = ApiTokenProvider::new(private_key.to_string(), api_key.clone(), api_url.clone());
+
+        match fireblocks.get_supported_assets().await {
+            Ok(s) => {
+                println!("YO: {:#?}",s);
+
+            },
+            Err(e) => {
+                eprintln!("Error fetching supported assets: {}", e);
+                assert!(false);
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_get_wallets() {
+        let api_key = "API_KEY".to_string();
+        let private_key = "API_SECRET_KEY_PATH";
+        let api_url = "https://api.fireblocks.io".to_string();
+        let fireblocks = ApiTokenProvider::new(private_key.to_string(), api_key.clone(), api_url.clone());
+
+        match fireblocks.get_asset_wallets().await {
+            Ok(s) => {
+                println!("YO: {:#?}",s);
+
+            },
+            Err(e) => {
+                eprintln!("Error fetching wallet assets: {}", e);
+                assert!(false);
+            }
+        }
+
+    }
 }
