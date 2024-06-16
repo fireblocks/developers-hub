@@ -179,7 +179,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
      // Call GET request
     let get_response = fireblocks.get_request("/v1/vault/accounts_paged").await?;
     println!("GET Response: {}", get_response);
-   
+
     // Call POST request
     let body = serde_json::json!({
        "name": "MyRustVault",
@@ -187,7 +187,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     });
     let post_response = fireblocks.post_request("/v1/vault/accounts", &body.to_string()).await?;
     println!("POST Response: {}", post_response);
-    
+
     Ok(())
 }
 
@@ -206,7 +206,7 @@ mod tests {
 
         match fireblocks.get_supported_assets().await {
             Ok(s) => {
-                println!("YO: {:#?}",s);
+                println!("{:#?}",s);
 
             },
             Err(e) => {
@@ -225,7 +225,7 @@ mod tests {
 
         match fireblocks.get_asset_wallets().await {
             Ok(s) => {
-                println!("YO: {:#?}",s);
+                println!("{:#?}",s);
 
             },
             Err(e) => {
