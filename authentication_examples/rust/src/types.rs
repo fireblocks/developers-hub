@@ -21,7 +21,6 @@ pub struct VaultAccountResponse {
     auto_fuel: bool,
 }
 
-
 #[derive(Debug, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PagedVaultAccountsResponse {
@@ -136,7 +135,6 @@ pub struct DepositAddressResponse {
     pub address_format: Option<String>,
 }
 
-
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TransactionArguments {
@@ -175,10 +173,10 @@ pub struct TransferPeerPath {
 pub struct DestinationTransferPeerPath {
     #[serde(rename = "type")]
     pub peer_type: PeerType,
-  //  #[serde(skip_serializing_if = "Option::is_none")]
+    //  #[serde(skip_serializing_if = "Option::is_none")]
     pub id: String,
-  //  #[serde(skip_serializing_if = "Option::is_none")]
-  //  pub one_time_address: Option<OneTimeAddress>,
+    //  #[serde(skip_serializing_if = "Option::is_none")]
+    //  pub one_time_address: Option<OneTimeAddress>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

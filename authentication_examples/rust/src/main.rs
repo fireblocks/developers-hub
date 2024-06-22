@@ -1,12 +1,12 @@
 mod types;
 
-use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
-use serde::{Serialize, Deserialize};
-use sha2::{Sha256, Digest};
-use uuid::Uuid;
-use chrono::Utc;
-use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
 use crate::types::*;
+use chrono::Utc;
+use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
+use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
+use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
+use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -28,10 +28,18 @@ pub struct ApiTokenProvider {
 
 impl ApiTokenProvider {
     pub fn new(private_key: String, api_key: String, api_url: String) -> Self {
-        ApiTokenProvider { private_key, api_key, api_url }
+        ApiTokenProvider {
+            private_key,
+            api_key,
+            api_url,
+        }
     }
 
-    pub fn sign_jwt(&self, path: &str, body: Option<&str>) -> Result<String, jsonwebtoken::errors::Error> {
+    pub fn sign_jwt(
+        &self,
+        path: &str,
+        body: Option<&str>,
+    ) -> Result<String, jsonwebtoken::errors::Error> {
         let now = Utc::now().timestamp();
         let nonce = Uuid::new_v4().to_string();
         let body_hash = match body {
@@ -48,7 +56,11 @@ impl ApiTokenProvider {
             body_hash,
         };
 
-        let token = encode(&Header::new(Algorithm::RS256), &claims, &EncodingKey::from_rsa_pem(self.private_key.as_bytes())?)?;
+        let token = encode(
+            &Header::new(Algorithm::RS256),
+            &claims,
+            &EncodingKey::from_rsa_pem(self.private_key.as_bytes())?,
+        )?;
         Ok(token)
     }
 
@@ -57,7 +69,10 @@ impl ApiTokenProvider {
 
         let client = reqwest::Client::new();
         let mut headers = HeaderMap::new();
-        headers.insert(AUTHORIZATION, HeaderValue::from_str(&format!("Bearer {}", token))?);
+        headers.insert(
+            AUTHORIZATION,
+            HeaderValue::from_str(&format!("Bearer {}", token))?,
+        );
         headers.insert("X-API-Key", HeaderValue::from_str(&self.api_key)?);
 
         // Make the GET request
@@ -72,19 +87,26 @@ impl ApiTokenProvider {
             let response_text = response.text().await?;
             Ok(response_text)
         } else {
-            Err(format!("GET Request failed with status: {}", response.status()))?
+            Err(format!(
+                "GET Request failed with status: {}",
+                response.status()
+            ))?
         }
     }
 
     // TODO: add PagedVaultAccountsRequestFilters param
-    pub async fn get_vaults(&self) -> Result<PagedVaultAccountsResponse, Box<dyn std::error::Error>> {
+    pub async fn get_vaults(
+        &self,
+    ) -> Result<PagedVaultAccountsResponse, Box<dyn std::error::Error>> {
         let response_text = self.get_request("/v1/vault/accounts_paged").await?;
         let vaults: PagedVaultAccountsResponse = serde_json::from_str(&response_text).unwrap();
         print!("{:?}", vaults);
         Ok(vaults)
     }
 
-    pub async fn get_supported_assets(&self) -> Result<Vec<AssetTypeResponse>, Box<dyn std::error::Error>> {
+    pub async fn get_supported_assets(
+        &self,
+    ) -> Result<Vec<AssetTypeResponse>, Box<dyn std::error::Error>> {
         let res = self.get_request("/v1/supported_assets").await?;
         let trimmed_res = res.trim();
         let result = serde_json::from_str::<Vec<AssetTypeResponse>>(trimmed_res);
@@ -93,7 +115,7 @@ impl ApiTokenProvider {
             Ok(supported) => {
                 println!("Response:\n{:#?}", supported);
                 Ok(supported)
-            },
+            }
             Err(e) => {
                 eprintln!("Failed to deserialize response: {:?}", trimmed_res);
                 eprintln!("Deserialization error: {}", e);
@@ -110,15 +132,21 @@ impl ApiTokenProvider {
         // let assets: GetAssetWalletsResponse = serde_json::from_str(&res).unwrap();
         // print!("{:?}", assets);
         Ok(res)
-
     }
 
-    pub async fn post_request(&self, path: &str, body: &str) -> Result<String, Box<dyn std::error::Error>> {
+    pub async fn post_request(
+        &self,
+        path: &str,
+        body: &str,
+    ) -> Result<String, Box<dyn std::error::Error>> {
         let token = self.sign_jwt(path, Some(body))?;
 
         let client = reqwest::Client::new();
         let mut headers = HeaderMap::new();
-        headers.insert(AUTHORIZATION, HeaderValue::from_str(&format!("Bearer {}", token))?);
+        headers.insert(
+            AUTHORIZATION,
+            HeaderValue::from_str(&format!("Bearer {}", token))?,
+        );
         headers.insert("X-API-Key", HeaderValue::from_str(&self.api_key)?);
 
         // Make the POST request
@@ -135,11 +163,38 @@ impl ApiTokenProvider {
             let response_text = response.text().await?;
             Ok(response_text)
         } else {
-            Err(format!("POST Request failed with status: {}", response.status()))?
+            Err(format!(
+                "POST Request failed with status: {}",
+                response.status()
+            ))?
         }
     }
 
-    pub async fn create_tx(&self, tx_args: &TransactionArguments) -> Result<CreateTransactionResponse, Box<dyn std::error::Error>> {
+    pub async fn create_vault(
+        &self,
+        name: &str,
+        hidden_on_ui: bool,
+        customer_ref_id: &str,
+        auto_fuel: bool,
+    ) -> Result<VaultAccountResponse, Box<dyn std::error::Error>> {
+        println!("Creating Vault account");
+        let body = CreateVaultRequest {
+            name: name.to_string(),
+            hidden_on_ui,
+            customer_ref_id: Option::from(customer_ref_id.to_string()),
+            auto_fuel,
+        };
+
+        let json_args = serde_json::to_string(&body)?;
+        let res = self.post_request("/v1/vault/accounts", &json_args).await?;
+
+        let create_vault_res: VaultAccountResponse = serde_json::from_str(&res)?;
+        Ok(create_vault_res)
+    }
+    pub async fn create_tx(
+        &self,
+        tx_args: &TransactionArguments,
+    ) -> Result<CreateTransactionResponse, Box<dyn std::error::Error>> {
         println!("Creating transaction with arguments: {:#?}", tx_args);
         let json_args = serde_json::to_string(tx_args)?;
         let res = self.post_request("/v1/transactions", &json_args).await?;
@@ -150,14 +205,14 @@ impl ApiTokenProvider {
     }
 }
 
-
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let api_key = "API_KEY".to_string();
     let private_key = "API_SECRET_KEY_PATH";
     let api_url = "https://api.fireblocks.io".to_string(); // For sandbox use: https://sandbox-api.fireblocks.io
-    
-    let fireblocks = ApiTokenProvider::new(private_key.to_string(), api_key.clone(), api_url.clone());
+
+    let fireblocks =
+        ApiTokenProvider::new(private_key.to_string(), api_key.clone(), api_url.clone());
     let tx = TransactionArguments {
         asset_id: "ETH_TEST5".to_string(),
         operation: TransactionOperation::TRANSFER,
@@ -167,33 +222,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         },
         destination: Some(DestinationTransferPeerPath {
             peer_type: PeerType::VAULT_ACCOUNT,
-            id: "1".to_string(),
+            id: "0".to_string(),
         }),
-        amount: "0.01".to_string(),
+        amount: "1.0".to_string(),
         note: "Sample transaction".to_string(),
     };
     println!("Creating TX");
     let c = fireblocks.create_tx(&tx).await?;
     println!("Sumitted TX: {:#?}", c);
-
-     // Call GET request
-    let get_response = fireblocks.get_request("/v1/vault/accounts_paged").await?;
-    println!("GET Response: {}", get_response);
-   
-    // Call POST request
-    let body = serde_json::json!({
-       "name": "MyRustVault",
-       "hiddenOnUI": true,
-    });
-    let post_response = fireblocks.post_request("/v1/vault/accounts", &body.to_string()).await?;
-    println!("POST Response: {}", post_response);
-    
     Ok(())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs;
     use tokio::test;
 
     #[tokio::test]
@@ -202,13 +245,13 @@ mod tests {
         let private_key = "API_SECRET_KEY_PATH";
         let api_url = "https://api.fireblocks.io".to_string(); // For sandbox use: https://sandbox-api.fireblocks.io
 
-        let fireblocks = ApiTokenProvider::new(private_key.to_string(), api_key.clone(), api_url.clone());
+        let fireblocks =
+            ApiTokenProvider::new(private_key.to_string(), api_key.clone(), api_url.clone());
 
         match fireblocks.get_supported_assets().await {
             Ok(s) => {
-                println!("YO: {:#?}",s);
-
-            },
+                println!("Supported Assets: {:#?}", s);
+            }
             Err(e) => {
                 eprintln!("Error fetching supported assets: {}", e);
                 assert!(false);
@@ -221,18 +264,28 @@ mod tests {
         let api_key = "API_KEY".to_string();
         let private_key = "API_SECRET_KEY_PATH";
         let api_url = "https://api.fireblocks.io".to_string();
-        let fireblocks = ApiTokenProvider::new(private_key.to_string(), api_key.clone(), api_url.clone());
+        let fireblocks =
+            ApiTokenProvider::new(private_key.to_string(), api_key.clone(), api_url.clone());
 
         match fireblocks.get_asset_wallets().await {
             Ok(s) => {
-                println!("YO: {:#?}",s);
-
-            },
+                println!("Test: {:#?}", s);
+            }
             Err(e) => {
                 eprintln!("Error fetching wallet assets: {}", e);
                 assert!(false);
             }
         }
+    }
 
+    #[test]
+    async fn test_create_vault() {
+        let api_key = "API_KEY".to_string();
+        let private_key = "API_SECRET_KEY_PATH";
+        let api_url = "https://api.fireblocks.io".to_string();
+        let fireblocks =
+            ApiTokenProvider::new(private_key.to_string(), api_key.clone(), api_url.clone());
+        let c = fireblocks.create_vault("Test", false, "2", true).await;
+        println!("{:#?}", c)
     }
 }
