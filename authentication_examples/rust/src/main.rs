@@ -314,6 +314,7 @@ mod tests {
             Ok(s) => {
                 println!("Supported Assets: {:#?}", s);
             }
+
             Err(e) => {
                 eprintln!("Error fetching supported assets: {}", e);
                 assert!(false);
@@ -414,4 +415,5 @@ mod tests {
             .unwrap();
         println!("{:#?}", c)
     }
+
 }
