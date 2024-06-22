@@ -6,6 +6,7 @@ use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
 use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+use std::fmt::format;
 use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -98,10 +99,57 @@ impl ApiTokenProvider {
     pub async fn get_vaults(
         &self,
     ) -> Result<PagedVaultAccountsResponse, Box<dyn std::error::Error>> {
-        let response_text = self.get_request("/v1/vault/accounts_paged").await?;
-        let vaults: PagedVaultAccountsResponse = serde_json::from_str(&response_text).unwrap();
+        let res = self.get_request("/v1/vault/accounts_paged").await?;
+        let vaults: PagedVaultAccountsResponse = serde_json::from_str(&res).unwrap();
         print!("{:?}", vaults);
         Ok(vaults)
+    }
+
+    // TODO: Handle no vault found with that vaultid
+    pub async fn get_vault_by_id(
+        &self,
+        vault_id: &str,
+    ) -> Result<VaultAccountResponse, Box<dyn std::error::Error>> {
+        let path = format!("/v1/vault/accounts/{}", vault_id);
+        let res = self.get_request(&path).await?;
+        let vault: VaultAccountResponse = serde_json::from_str(&res).unwrap();
+        Ok(vault)
+    }
+
+    pub async fn get_vault_asset_by_id(
+        &self,
+        vault_id: &str,
+        asset_id: &str,
+    ) -> Result<AssetResponse, Box<dyn std::error::Error>> {
+        let path = format!("/v1/vault/accounts/{}/{}", vault_id, asset_id);
+        let res = self.get_request(&path).await?;
+        let vault: AssetResponse = serde_json::from_str(&res).unwrap();
+        Ok(vault)
+    }
+
+    pub async fn get_deposit_address(
+        &self,
+        vault_id: &str,
+        asset_id: &str,
+    ) -> Result<Vec<DepositAddressResponse>, Box<dyn std::error::Error>> {
+        let path = format!("/v1/vault/accounts/{}/{}/addresses", vault_id, asset_id);
+        let res = self.get_request(&path).await?;
+        let vault: Vec<DepositAddressResponse> = serde_json::from_str(&res).unwrap();
+        Ok(vault)
+    }
+
+    pub async fn get_utxo(
+        &self,
+        vault_id: &str,
+        asset_id: &str,
+    ) -> Result<Vec<UnspentInputsResponse>, Box<dyn std::error::Error>> {
+        let path = format!(
+            "/v1/vault/accounts/{}/{}/unspent_inputs",
+            vault_id, asset_id
+        );
+        let res = self.get_request(&path).await?;
+        let utxo: Vec<UnspentInputsResponse> = serde_json::from_str(&res).unwrap();
+        Ok(utxo)
     }
 
     pub async fn get_supported_assets(
@@ -168,6 +216,20 @@ impl ApiTokenProvider {
                 response.status()
             ))?
         }
+    }
+
+    pub async fn refresh_vault(
+        &self,
+        vault_id: &str,
+        asset_id: &str,
+        request_opts: &RequestOptions,
+    ) -> Result<AssetResponse, Box<dyn std::error::Error>> {
+        let path = format!("/v1/vault/accounts/{vault_id}/{asset_id}/balance");
+        let json_args = serde_json::to_string(request_opts)?;
+        let res = self.post_request(&path, &json_args).await?;
+
+        let refresh_res: AssetResponse = serde_json::from_str(&res)?;
+        Ok(refresh_res)
     }
 
     pub async fn create_vault(
@@ -286,6 +348,70 @@ mod tests {
         let fireblocks =
             ApiTokenProvider::new(private_key.to_string(), api_key.clone(), api_url.clone());
         let c = fireblocks.create_vault("Test", false, "2", true).await;
+        println!("{:#?}", c)
+    }
+
+    #[test]
+    async fn test_get_vault_by_id() {
+        let api_key = "API_KEY".to_string();
+        let private_key = "API_SECRET_KEY_PATH";
+        let api_url = "https://api.fireblocks.io".to_string();
+        let fireblocks =
+            ApiTokenProvider::new(private_key.to_string(), api_key.clone(), api_url.clone());
+        let c = fireblocks.get_vault_by_id("1").await.unwrap();
+        println!("{:#?}", c)
+    }
+
+    #[test]
+    async fn test_get_vault_asset_by_id() {
+        let api_key = "API_KEY".to_string();
+        let private_key = "API_SECRET_KEY_PATH";
+        let api_url = "https://api.fireblocks.io".to_string();
+        let fireblocks =
+            ApiTokenProvider::new(private_key.to_string(), api_key.clone(), api_url.clone());
+        let c = fireblocks.get_vault_asset_by_id("0", "ETH").await.unwrap();
+        println!("{:#?}", c)
+    }
+
+    #[test]
+    async fn test_get_deposit_addr() {
+        let api_key = "API_KEY".to_string();
+        let private_key = "API_SECRET_KEY_PATH";
+        let api_url = "https://api.fireblocks.io".to_string();
+        let fireblocks =
+            ApiTokenProvider::new(private_key.to_string(), api_key.clone(), api_url.clone());
+        let c = fireblocks.get_deposit_address("0", "ETH").await.unwrap();
+        println!("{:#?}", c)
+    }
+
+    #[test]
+    async fn test_get_utxo() {
+        let api_key = "API_KEY".to_string();
+        let private_key = "API_SECRET_KEY_PATH";
+        let api_url = "https://api.fireblocks.io".to_string();
+        let fireblocks =
+            ApiTokenProvider::new(private_key.to_string(), api_key.clone(), api_url.clone());
+        let c = fireblocks.get_utxo("0", "BTC").await.unwrap();
+        println!("{:#?}", c)
+    }
+    #[test]
+    async fn test_refresh() {
+        let api_key = "API_KEY".to_string();
+        let private_key = "API_SECRET_KEY_PATH";
+        let api_url = "https://api.fireblocks.io".to_string();
+        let fireblocks =
+            ApiTokenProvider::new(private_key.to_string(), api_key.clone(), api_url.clone());
+        let c = fireblocks
+            .refresh_vault(
+                "0",
+                "ETH",
+                &RequestOptions {
+                    idempotency_key: None,
+                    ncw: None,
+                },
+            )
+            .await
+            .unwrap();
         println!("{:#?}", c)
     }
 }

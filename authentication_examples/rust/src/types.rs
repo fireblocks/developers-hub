@@ -111,6 +111,24 @@ pub struct AssetWalletsResponse {
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct UnspentInputsResponse {
+    pub address: String,
+    pub input: Input,
+    pub amount: String,
+    pub confirmations: String,
+    pub status: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Input {
+    #[serde(rename = "txHash")]
+    pub tx_hash: String,
+    pub number: i64,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GetAssetWalletsResponse {
     #[serde(rename = "assetWallets")]
     pub asset_wallets: Vec<AssetWalletsResponse>,
@@ -289,4 +307,20 @@ pub struct RawMessageData {
 #[serde(rename_all = "camelCase")]
 pub struct UnsignedMessage {
     pub content: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RequestOptions {
+    #[serde(rename = "idempotencyKey")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub idempotency_key: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ncw: Option<NCW>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct NCW {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub wallet_id: Option<String>,
 }
